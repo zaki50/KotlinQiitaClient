@@ -8,6 +8,7 @@ import android.widget.ListView
 import android.widget.ProgressBar
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity
 import com.trello.rxlifecycle.kotlin.bindToLifecycle
+import io.realm.Realm
 import org.zakky.qiitaclient.client.ArticleClient
 import org.zakky.qiitaclient.model.Article
 import rx.android.schedulers.AndroidSchedulers
@@ -18,6 +19,9 @@ class MainActivity : RxAppCompatActivity() {
 
     @Inject
     lateinit var articleClient: ArticleClient
+
+    @Inject
+    lateinit var realm: Realm
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +38,9 @@ class MainActivity : RxAppCompatActivity() {
         listView.adapter = listAdapter
         listView.setOnItemClickListener { adapterView, view, position, id ->
             val article = listAdapter.getItem(position) as Article
-            ArticleActivity.intent(this, article).let { startActivity(it) }
+
+            val articleId = article.id ?: return@setOnItemClickListener
+            ArticleActivity.intent(this, articleId).let { startActivity(it) }
         }
 
         searchButton.setOnClickListener {
@@ -47,13 +53,22 @@ class MainActivity : RxAppCompatActivity() {
                         progressBar.visibility = View.GONE
                     }
                     .bindToLifecycle(this)
-                    .subscribe({
+                    .subscribe({ articles: List<Article> ->
                         queryEditText.text.clear()
-                        listAdapter.articles = it
+
+                        realm.executeTransaction {
+                            realm.delete(Article::class.java)
+                            listAdapter.articles = realm.copyToRealmOrUpdate(articles)
+                        }
                         listAdapter.notifyDataSetChanged()
                     }, {
                         toast("エラー: $it")
                     })
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        realm.close()
     }
 }
