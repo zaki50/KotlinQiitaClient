@@ -1,8 +1,11 @@
 package org.zakky.qiitaclient
 
 import android.os.Bundle
+import android.view.View
+import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.ProgressBar
 import com.google.gson.FieldNamingPolicy
 import com.google.gson.GsonBuilder
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity
@@ -21,9 +24,13 @@ class MainActivity : RxAppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val listAdapter = ArticleListAdapter(this)
 
         val listView = findViewById(R.id.list_view) as ListView
+        val progressBar = findViewById(R.id.progress_bar) as ProgressBar
+        val queryEditText = findViewById(R.id.query_edit_text) as EditText
+        val searchButton = findViewById(R.id.search_button) as Button
+
+        val listAdapter = ArticleListAdapter(this)
         listView.adapter = listAdapter
         listView.setOnItemClickListener { adapterView, view, position, id ->
             val article = listAdapter.getItem(position) as Article
@@ -40,13 +47,16 @@ class MainActivity : RxAppCompatActivity() {
                 .build()
         val articleClient = retrofit.create(ArticleClient::class.java)
 
-        val queryEditText = findViewById(R.id.query_edit_text) as EditText
-        val searchButton = findViewById(R.id.search_button)
 
         searchButton.setOnClickListener {
+            progressBar.visibility = View.VISIBLE
+
             articleClient.search(queryEditText.text.toString())
                     .subscribeOn(Schedulers.io())
                     .observeOn(AndroidSchedulers.mainThread())
+                    .doAfterTerminate {
+                        progressBar.visibility = View.GONE
+                    }
                     .bindToLifecycle(this)
                     .subscribe({
                         queryEditText.text.clear()
