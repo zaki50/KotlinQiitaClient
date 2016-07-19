@@ -28,7 +28,7 @@ class MainActivity : RxAppCompatActivity() {
         val listView = findViewById(R.id.list_view) as ListView
         val progressBar = findViewById(R.id.progress_bar) as ProgressBar
         val queryEditText = findViewById(R.id.query_edit_text) as EditText
-        val searchButton = findViewById(R.id.search_button) as Button
+        val searchButton = findViewById(R.id.search) as Button
 
         val listAdapter = ArticleListAdapter(this)
         listView.adapter = listAdapter
