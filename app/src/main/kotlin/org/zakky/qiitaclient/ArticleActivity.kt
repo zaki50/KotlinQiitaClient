@@ -31,7 +31,7 @@ class ArticleActivity : AppCompatActivity() {
         val webView = findViewById(R.id.web_view) as WebView
 
         val articleId = intent.getStringExtra(ARTICLE_ID_EXTRA)
-        val article = realm.where(Article::class.java).equalTo(Article::id.name, articleId).findFirst()
+        val article = realm.where(Article::class.java).equalTo(Article::id, articleId).findFirst()
 
         articleView.setArticle(article)
         webView.loadUrl(article.url)
